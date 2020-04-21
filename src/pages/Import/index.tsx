@@ -19,6 +19,7 @@ interface FileProps {
 }
 
 const Import: React.FC = () => {
+  const [errorMessage, setErrorMessage] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<FileProps[]>([]);
   const history = useHistory();
 
@@ -27,15 +28,20 @@ const Import: React.FC = () => {
     try {
       data.append('file', uploadedFiles[0].file);
       await api.post('/transactions/import', data);
+      history.push('/');
     } catch (err) {
-      console.log(err.response.error);
+      setErrorMessage(
+        err.response.data.error
+          ? err.response.data.error
+          : 'Erro ao importar o arquivo.',
+      );
     }
   }
 
   function submitFile(files: File[]): void {
     const moreUploadedFiles: FileProps[] = files.map(
       (file: File): FileProps => {
-        return { file, name: file.name, readableSize: file.size.toString() };
+        return { file, name: file.name, readableSize: filesize(file.size) };
       },
     );
 
@@ -54,6 +60,7 @@ const Import: React.FC = () => {
           <Footer>
             <p>
               <img src={alert} alt="Alert" />
+              {errorMessage && <p>{errorMessage}</p>}
               Permitido apenas arquivos CSV
             </p>
             <button onClick={handleUpload} type="button">
